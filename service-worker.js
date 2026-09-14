@@ -1,5 +1,5 @@
 // 오프라인 지원을 위한 최소 서비스워커 (캐시 우선 전략)
-const CACHE_NAME = 'gon-plan-cache-v1';
+const CACHE_NAME = 'gon-plan-cache-v2';
 const CACHE_FILES = [
     './',
     './index.html',
