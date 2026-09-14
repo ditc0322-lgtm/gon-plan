@@ -1,5 +1,5 @@
-// 오프라인 지원을 위한 최소 서비스워커 (캐시 우선 전략)
-const CACHE_NAME = 'gon-plan-cache-v4';
+// 오프라인 지원을 위한 최소 서비스워커 (네트워크 우선 전략)
+const CACHE_NAME = 'gon-plan-cache-v5';
 const CACHE_FILES = [
     './',
     './index.html',
@@ -27,8 +27,15 @@ self.addEventListener('activate', (event) => {
     self.clients.claim();
 });
 
+// 온라인일 때는 항상 최신 파일을 받아오고, 오프라인일 때만 캐시를 사용
 self.addEventListener('fetch', (event) => {
     event.respondWith(
-        caches.match(event.request).then((cached) => cached || fetch(event.request))
+        fetch(event.request)
+            .then((response) => {
+                const responseClone = response.clone();
+                caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+                return response;
+            })
+            .catch(() => caches.match(event.request))
     );
 });

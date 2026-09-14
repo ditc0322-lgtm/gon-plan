@@ -6,8 +6,8 @@ body {
 
 /* 카테고리 탭 버튼 */
 .tab-btn {
-    padding: 0.85rem 0.3rem;
-    font-size: 1.05rem;
+    padding: 1rem 0.5rem;
+    font-size: 1.3rem;
     font-weight: 700;
     color: #6b7280;
     border-radius: 0.55rem;
