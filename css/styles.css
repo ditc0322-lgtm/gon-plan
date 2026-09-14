@@ -6,13 +6,15 @@ body {
 
 /* 카테고리 탭 버튼 */
 .tab-btn {
-    padding: 1rem 0.5rem;
-    font-size: 1.3rem;
+    padding: 1.1rem 0.4rem;
+    font-size: 1.95rem;
     font-weight: 700;
     color: #6b7280;
     border-radius: 0.55rem;
     transition: all 0.2s ease;
-    white-space: nowrap;
+    white-space: normal;
+    line-height: 1.2;
+    word-break: keep-all;
 }
 
 .tab-btn.active {
