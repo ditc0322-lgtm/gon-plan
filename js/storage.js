@@ -128,6 +128,16 @@ const GonPlanStorage = {
         return this.getItemsByCategory('todo').filter(item => !item.completed);
     },
 
+    /**
+     * 완료 탭용: 전체 카테고리를 통틀어 완료된 항목 (완료일 최신순)
+     * @returns {Array} 완료된 항목 배열
+     */
+    getCompletedItems() {
+        return this.load()
+            .filter(item => item.completed)
+            .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
+    },
+
     // ── 일일활동(습관) 체크 기록 ────────────────────────────
 
     /**
@@ -230,46 +240,6 @@ const GonPlanStorage = {
     deleteDailyLogsForHabit(habitId) {
         const logs = this.loadDailyLogs().filter(l => l.habitId !== habitId);
         this.saveDailyLogs(logs);
-    },
-
-    /**
-     * 습관의 연속 달성일 계산 (오늘이 미체크면 어제부터 역산)
-     * @param {string} habitId
-     */
-    getStreak(habitId) {
-        const checkedDates = new Set(
-            this.loadDailyLogs()
-                .filter(l => l.habitId === habitId && l.checked)
-                .map(l => l.date)
-        );
-
-        const cursor = new Date();
-        if (!checkedDates.has(this.formatDateStr(cursor))) {
-            cursor.setDate(cursor.getDate() - 1);
-        }
-
-        let streak = 0;
-        while (checkedDates.has(this.formatDateStr(cursor))) {
-            streak++;
-            cursor.setDate(cursor.getDate() - 1);
-        }
-        return streak;
-    },
-
-    /**
-     * 습관의 최근 n일 달성률
-     * @param {string} habitId
-     * @param {number} days
-     */
-    getHabitRate(habitId, days) {
-        const dates = this.getRecentDates(days);
-        const logs = this.loadDailyLogs().filter(l => l.habitId === habitId);
-        const checkedCount = dates.filter(date => logs.some(l => l.date === date && l.checked)).length;
-        return {
-            checkedCount,
-            total: dates.length,
-            rate: dates.length ? Math.round((checkedCount / dates.length) * 100) : 0
-        };
     },
 
     /**

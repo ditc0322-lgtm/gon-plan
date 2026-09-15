@@ -27,7 +27,7 @@ class GonPlanApp {
         this.cacheElements();
         this.bindEvents();
         this.updateAddFormVisibility();
-        if (this.currentCategory !== 'daily') {
+        if (CATEGORIES[this.currentCategory]) {
             this.itemInput.placeholder = CATEGORIES[this.currentCategory].placeholder;
         }
         this.render();
@@ -83,17 +83,18 @@ class GonPlanApp {
         e.currentTarget.classList.add('active');
 
         this.updateAddFormVisibility();
-        if (category !== 'daily') {
+        if (CATEGORIES[category]) {
             this.itemInput.placeholder = CATEGORIES[category].placeholder;
         }
         this.render();
     }
 
     /**
-     * 입력 폼 표시 여부 (일일활동은 해야할일에서만 추가되므로 입력 폼을 숨김)
+     * 입력 폼 표시 여부 (일일활동/완료 탭은 자체 입력이 없으므로 입력 폼을 숨김)
      */
     updateAddFormVisibility() {
-        this.addFormCard.classList.toggle('hidden', this.currentCategory === 'daily');
+        const hideForm = this.currentCategory === 'daily' || this.currentCategory === 'done';
+        this.addFormCard.classList.toggle('hidden', hideForm);
     }
 
     /**
@@ -102,7 +103,7 @@ class GonPlanApp {
     handleAdd(e) {
         e.preventDefault();
 
-        if (this.currentCategory === 'daily') {
+        if (!CATEGORIES[this.currentCategory]) {
             return;
         }
 
@@ -220,14 +221,6 @@ class GonPlanApp {
     }
 
     /**
-     * "YYYY-MM-DD" → "M/D" 형식
-     */
-    formatShortDateFromStr(dateStr) {
-        const [, m, d] = dateStr.split('-').map(Number);
-        return `${m}/${d}`;
-    }
-
-    /**
      * 해야할일 / 하고싶은 것 / 원하는 것 / 좋아하는 것 항목 카드 HTML 생성
      */
     createItemHTML(item) {
@@ -265,7 +258,7 @@ class GonPlanApp {
         const tile = (label, pct) => `
             <div class="text-center">
                 <div class="text-[11px] text-gray-400 font-bold mb-1">${label}</div>
-                <div class="text-xl font-extrabold text-indigo-600">${pct}%</div>
+                <div class="stat-value font-extrabold text-indigo-600">${pct}%</div>
                 <div class="h-1.5 bg-gray-100 rounded-full mt-2 overflow-hidden">
                     <div class="h-full bg-indigo-500 rounded-full" style="width:${pct}%"></div>
                 </div>
@@ -293,54 +286,20 @@ class GonPlanApp {
     }
 
     /**
-     * 일일활동 습관 카드 HTML 생성 (오늘 체크 + 메모 + 최근 7일 기록)
+     * 일일활동 습관 카드 HTML 생성 (오늘 체크 + 메모)
      */
     createHabitCardHTML(item) {
         const today = GonPlanStorage.getTodayStr();
         const todayLog = GonPlanStorage.getDailyLog(item.id, today);
         const checked = !!(todayLog && todayLog.checked);
         const memo = (todayLog && todayLog.memo) || '';
-        const streak = GonPlanStorage.getStreak(item.id);
-        const weekly = GonPlanStorage.getHabitRate(item.id, 7);
         const escapedTitle = this.escapeHtml(item.title).replace(/'/g, "\\'");
-
-        const history = GonPlanStorage.getRecentDates(7).map(date => {
-            const isToday = date === today;
-            let dotClass = 'day-dot';
-            let dotText = '✕';
-            let label = this.formatShortDateFromStr(date);
-
-            if (isToday) {
-                dotClass += ' today';
-                dotText = String(new Date().getDate());
-                label = '오늘';
-            } else {
-                const log = GonPlanStorage.getDailyLog(item.id, date);
-                if (log && log.checked) {
-                    dotClass += ' done';
-                    dotText = '✓';
-                } else {
-                    dotClass += ' miss';
-                }
-            }
-
-            return `
-                <div class="flex flex-col items-center gap-1 flex-1">
-                    <div class="${dotClass}">${dotText}</div>
-                    <span class="text-[10px] text-gray-400">${label}</span>
-                </div>
-            `;
-        }).join('');
-
-        const streakLabel = streak > 0
-            ? `<span class="text-xs font-bold text-amber-600">🔥 ${streak}일 연속</span>`
-            : `<span class="text-xs font-bold text-gray-400">연속 기록 없음</span>`;
 
         return `
             <div class="item-row bg-white rounded-lg shadow p-4 mb-3">
                 <div class="flex items-center gap-3">
                     <button class="${checked ? 'btn-complete done' : 'btn-complete'}" onclick="app.handleDailyCheck('${item.id}')">${checked ? '오늘 완료 ✓' : '오늘 체크'}</button>
-                    <p class="flex-1 text-gray-800 font-medium break-words">${this.escapeHtml(item.title)}</p>
+                    <p class="item-title flex-1 text-gray-800 font-medium break-words">${this.escapeHtml(item.title)}</p>
                 </div>
                 <div class="flex justify-end gap-2 mt-2">
                     <button class="btn-sub bg-indigo-50 text-indigo-600" onclick="app.openEditModal('${item.id}', '${escapedTitle}')">수정</button>
@@ -348,13 +307,22 @@ class GonPlanApp {
                 </div>
                 <div class="mt-3 pt-3 border-t border-gray-100">
                     <input type="text" value="${this.escapeHtml(memo)}" placeholder="오늘 메모 입력"
-                        class="w-full text-sm px-3 py-1.5 border border-dashed border-gray-200 rounded-lg text-gray-600 mb-2"
+                        class="w-full text-sm px-3 py-1.5 border border-dashed border-gray-200 rounded-lg text-gray-600"
                         oninput="app.handleDailyMemoChange('${item.id}', this.value)">
-                    <div class="flex gap-1.5">${history}</div>
-                    <div class="flex justify-between items-center mt-2">
-                        ${streakLabel}
-                        <span class="text-xs text-gray-400">최근 7일 ${weekly.checkedCount}/${weekly.total} (${weekly.rate}%)</span>
-                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * 완료 탭 항목 카드 HTML 생성 (완료일 + 항목명만 표시)
+     */
+    createDoneItemHTML(item) {
+        return `
+            <div class="item-row bg-white rounded-lg shadow p-4">
+                <div class="flex items-center justify-between gap-3">
+                    <p class="item-title text-gray-800 break-words flex-1 min-w-0">${this.escapeHtml(item.title)}</p>
+                    <span class="done-date">${this.formatShortDate(item.completedAt)}</span>
                 </div>
             </div>
         `;
@@ -375,6 +343,10 @@ class GonPlanApp {
     render() {
         if (this.currentCategory === 'daily') {
             this.renderDaily();
+            return;
+        }
+        if (this.currentCategory === 'done') {
+            this.renderDone();
             return;
         }
         this.renderStandardList();
@@ -427,6 +399,23 @@ class GonPlanApp {
             this.createDailySummaryHTML() +
             this.createTodayLabelHTML() +
             items.map(item => this.createHabitCardHTML(item)).join('');
+    }
+
+    /**
+     * 완료 탭 렌더링 (전체 카테고리의 완료 항목을 완료일 최신순으로 표시)
+     */
+    renderDone() {
+        const items = GonPlanStorage.getCompletedItems();
+
+        if (items.length === 0) {
+            this.itemListContainer.innerHTML = '';
+            this.emptyStateText.textContent = '아직 완료한 항목이 없습니다.';
+            this.emptyState.classList.remove('hidden');
+            return;
+        }
+
+        this.emptyState.classList.add('hidden');
+        this.itemListContainer.innerHTML = items.map(item => this.createDoneItemHTML(item)).join('');
     }
 }
 

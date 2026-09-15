@@ -4,10 +4,14 @@ body {
     -webkit-tap-highlight-color: transparent;
 }
 
+:root {
+    --xl-font: 1.91rem;
+}
+
 /* 카테고리 탭 버튼 */
 .tab-btn {
     padding: 1.2rem 0.4rem;
-    font-size: 2.2rem;
+    font-size: var(--xl-font);
     font-weight: 700;
     color: #6b7280;
     border-radius: 0.55rem;
@@ -15,6 +19,23 @@ body {
     white-space: normal;
     line-height: 1.2;
     word-break: keep-all;
+}
+
+/* 입력창/추가 버튼: 탭과 동일한 크기 */
+.form-text-lg {
+    font-size: var(--xl-font) !important;
+    line-height: 1.25;
+}
+
+/* 항목 값(제목) 텍스트: 탭과 동일한 크기 */
+.item-title {
+    font-size: var(--xl-font);
+    line-height: 1.25;
+}
+
+/* 진도율(주간/월간/전체) 수치: 탭과 동일한 크기 */
+.stat-value {
+    font-size: var(--xl-font);
 }
 
 .tab-btn.active {
@@ -105,34 +126,4 @@ body {
     flex: 1;
     height: 1px;
     background-color: #e5e7eb;
-}
-
-/* 일일활동 최근 7일 기록 점 */
-.day-dot {
-    flex: 1;
-    aspect-ratio: 1;
-    border-radius: 7px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.6rem;
-    font-weight: 800;
-    color: #ffffff;
-    background-color: #e5e7eb;
-}
-
-.day-dot.done {
-    background-color: #16a34a;
-}
-
-.day-dot.miss {
-    background-color: transparent;
-    border: 1.5px solid #e5e7eb;
-    color: #9ca3af;
-}
-
-.day-dot.today {
-    background-color: #eef2ff;
-    border: 2px solid #4f46e5;
-    color: #4f46e5;
 }
